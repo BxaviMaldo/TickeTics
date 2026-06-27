@@ -1,0 +1,2 @@
+[start]
+cmd = "node servidor.js"
