@@ -4,6 +4,7 @@
   "description": "Backend del sistema de tickets de soporte técnico TickeTics",
   "main": "servidor.js",
   "scripts": {
+    "start": "node servidor.js",
     "inicio": "node servidor.js",
     "desarrollo": "nodemon servidor.js"
   },
