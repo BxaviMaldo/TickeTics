@@ -33,6 +33,7 @@ const sm = {
 
 const GestionUsuarios = () => {
   const { usuario: usuarioActual } = useAutenticacion();
+  console.log('usuarioActual:', usuarioActual);
   const [usuarios, setUsuarios] = useState([]);
   const [mostrarForm, setMostrarForm] = useState(false);
   const [form, setForm] = useState({ nombre: '', correo: '', rol: 'cliente' });
