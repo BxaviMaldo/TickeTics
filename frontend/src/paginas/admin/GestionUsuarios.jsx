@@ -89,8 +89,9 @@ const GestionUsuarios = () => {
       setConfirmarEliminar(null);
       cargar();
     } catch (err) {
-      setError(err.response?.data?.mensaje || 'Error al eliminar usuario');
+      setError(err.response?.data?.mensaje || 'No se puede eliminar este usuario porque tiene tickets asociados.');
       setConfirmarEliminar(null);
+      setTimeout(() => setError(''), 5000);
     }
   };
 
@@ -179,6 +180,7 @@ const GestionUsuarios = () => {
       )}
 
       {exito && <div style={s.exitoMsg}>{exito}</div>}
+      {error && !mostrarForm && !editando && <div style={s.errorMsg}>{error}</div>}
 
       {/* Filtros */}
       <div style={s.filtros}>
@@ -248,6 +250,7 @@ const s = {
   celda:       { color: '#4b5563' },
   rolBadge:    { borderRadius: '20px', padding: '2px 10px', fontSize: '0.75rem', fontWeight: 700, color: '#fff', display: 'inline-block', width: 'fit-content' },
   exitoMsg:    { background: '#dcfce7', color: '#166534', border: '1px solid #86efac', borderRadius: '8px', padding: '0.75rem 1rem', marginBottom: '1rem', fontSize: '0.9rem' },
+  errorMsg:    { background: '#fee2e2', color: '#991b1b', border: '1px solid #fca5a5', borderRadius: '8px', padding: '0.75rem 1rem', marginBottom: '1rem', fontSize: '0.9rem' },
   btnEditar:   { padding: '0.35rem 0.6rem', background: '#f0f1ff', color: 'var(--azul-medio)', border: '1px solid var(--lila)', borderRadius: '6px', cursor: 'pointer', fontSize: '0.9rem' },
   btnEliminar: { padding: '0.35rem 0.6rem', background: '#fff0f0', color: '#dc2626', border: '1px solid #fca5a5', borderRadius: '6px', cursor: 'pointer', fontSize: '0.9rem' },
 };
