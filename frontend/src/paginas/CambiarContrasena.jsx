@@ -16,6 +16,8 @@ const CambiarContrasena = () => {
   const [confirmar, setConfirmar] = useState('');
   const [error, setError]         = useState('');
   const [cargando, setCargando]   = useState(false);
+  const [verNueva, setVerNueva]       = useState(false);
+  const [verConfirmar, setVerConfirmar] = useState(false);
   const { usuario } = useAutenticacion();
   const navegar = useNavigate();
 
@@ -49,7 +51,10 @@ const CambiarContrasena = () => {
         <form onSubmit={manejarEnvio} style={s.form}>
           <div style={s.campo}>
             <label style={s.etiqueta}>Nueva contraseña</label>
-            <input type="password" value={nueva} onChange={(e) => setNueva(e.target.value)} required style={s.entrada} />
+            <div style={s.inputWrap}>
+              <input type={verNueva ? 'text' : 'password'} value={nueva} onChange={(e) => setNueva(e.target.value)} required style={{ ...s.entrada, flex: 1, border: 'none', outline: 'none' }} />
+              <button type="button" onClick={() => setVerNueva(!verNueva)} style={s.ojo}>{verNueva ? '🙈' : '👁️'}</button>
+            </div>
           </div>
 
           <div style={s.requisitos}>
@@ -65,7 +70,10 @@ const CambiarContrasena = () => {
 
           <div style={s.campo}>
             <label style={s.etiqueta}>Confirmar contraseña</label>
-            <input type="password" value={confirmar} onChange={(e) => setConfirmar(e.target.value)} required style={s.entrada} />
+            <div style={s.inputWrap}>
+              <input type={verConfirmar ? 'text' : 'password'} value={confirmar} onChange={(e) => setConfirmar(e.target.value)} required style={{ ...s.entrada, flex: 1, border: 'none', outline: 'none' }} />
+              <button type="button" onClick={() => setVerConfirmar(!verConfirmar)} style={s.ojo}>{verConfirmar ? '🙈' : '👁️'}</button>
+            </div>
             {confirmar && nueva !== confirmar && (
               <p style={{ color: '#dc2626', fontSize: '0.8rem' }}>Las contraseñas no coinciden</p>
             )}
@@ -94,6 +102,8 @@ const s = {
   campo:    { display: 'flex', flexDirection: 'column', gap: '0.35rem' },
   etiqueta: { fontWeight: 600, fontSize: '0.9rem', color: '#374151' },
   entrada:  { padding: '0.65rem 0.9rem', border: '1px solid var(--borde)', borderRadius: '8px', fontSize: '1rem' },
+  inputWrap:{ display: 'flex', alignItems: 'center', border: '1px solid var(--borde)', borderRadius: '8px', overflow: 'hidden' },
+  ojo:      { padding: '0 0.75rem', background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '1.1rem' },
   requisitos:{ background: '#f9fafb', borderRadius: '8px', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' },
   error:    { color: '#dc2626', fontSize: '0.85rem' },
   btn:       { flex: 1, padding: '0.75rem', background: 'var(--azul-oscuro)', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', fontSize: '1rem' },
