@@ -41,6 +41,9 @@ enrutador.put('/:id', autenticar, verificarRol('administrador'), registrar('actu
 enrutador.delete('/:id', autenticar, verificarRol('administrador'), async (req, res) => {
   try {
     const id = req.params.id;
+    if (Number(id) === req.usuario.id) {
+      return res.status(400).json({ mensaje: 'No puedes eliminar tu propia cuenta.' });
+    }
     const usuario = await Usuario.findByPk(id);
     if (!usuario) return res.status(404).json({ mensaje: 'Usuario no encontrado' });
 
