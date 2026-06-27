@@ -1,5 +1,6 @@
 const express = require('express');
-const { Usuario, Rol } = require('../modelos');
+const { Usuario, Rol, Ticket, Comentario, Valoracion, RegistroAuditoria } = require('../modelos');
+const { Op } = require('sequelize');
 const autenticar = require('../middlewares/autenticar');
 const verificarRol = require('../middlewares/verificarRol');
 
@@ -38,8 +39,25 @@ enrutador.put('/:id', autenticar, verificarRol('administrador'), async (req, res
 // DELETE /api/usuarios/:id — solo administrador
 enrutador.delete('/:id', autenticar, verificarRol('administrador'), async (req, res) => {
   try {
-    const usuario = await Usuario.findByPk(req.params.id);
+    const id = req.params.id;
+    const usuario = await Usuario.findByPk(id);
     if (!usuario) return res.status(404).json({ mensaje: 'Usuario no encontrado' });
+
+    // Eliminar comentarios del usuario
+    await Comentario.destroy({ where: { usuario_id: id } });
+
+    // Eliminar valoraciones del usuario
+    await Valoracion.destroy({ where: { usuario_id: id } });
+
+    // Eliminar tickets creados por el usuario (y sus comentarios/valoraciones en cascada)
+    await Ticket.destroy({ where: { creado_por: id } });
+
+    // Desasignar tickets donde era técnico
+    await Ticket.update({ asignado_a: null }, { where: { asignado_a: id } });
+
+    // Nullificar auditoría
+    await RegistroAuditoria.update({ usuario_id: null }, { where: { usuario_id: id } });
+
     await usuario.destroy();
     res.json({ mensaje: 'Usuario eliminado correctamente' });
   } catch (error) {
