@@ -43,6 +43,19 @@ enrutador.delete('/:id', autenticar, verificarRol('administrador'), async (req, 
     const usuario = await Usuario.findByPk(id);
     if (!usuario) return res.status(404).json({ mensaje: 'Usuario no encontrado' });
 
+    // Verificar que no tenga tickets abiertos o en proceso
+    const { sequelize } = require('../modelos');
+    const estadoCerrado = await sequelize.models.EstadoTicket.findOne({ where: { nombre: 'cerrado' } });
+    const ticketsActivos = await Ticket.count({
+      where: {
+        creado_por: id,
+        id_estado: { [Op.ne]: estadoCerrado.id_estado },
+      },
+    });
+    if (ticketsActivos > 0) {
+      return res.status(400).json({ mensaje: `No se puede eliminar: el usuario tiene ${ticketsActivos} ticket(s) sin cerrar.` });
+    }
+
     // Eliminar comentarios del usuario
     await Comentario.destroy({ where: { usuario_id: id } });
 
