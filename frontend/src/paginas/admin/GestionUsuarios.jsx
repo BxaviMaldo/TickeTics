@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import api from '../../servicios/api';
+import { useAutenticacion } from '../../contexto/ContextoAutenticacion';
 
 const colorRol = { cliente: '#f9b17a', tecnico: '#676fad', administrador: '#2d3250' };
 
@@ -31,6 +32,7 @@ const sm = {
 };
 
 const GestionUsuarios = () => {
+  const { usuario: usuarioActual } = useAutenticacion();
   const [usuarios, setUsuarios] = useState([]);
   const [mostrarForm, setMostrarForm] = useState(false);
   const [form, setForm] = useState({ nombre: '', correo: '', rol: 'cliente' });
@@ -215,7 +217,9 @@ const GestionUsuarios = () => {
             <span style={s.celda}>{new Date(u.fecha_creacion || u.creado_en).toLocaleDateString()}</span>
             <div style={{ display: 'flex', gap: '0.4rem' }}>
               <button onClick={() => { setMostrarForm(false); abrirEditar(u); }} style={s.btnEditar}>✏️</button>
-              <button onClick={() => setConfirmarEliminar(u)} style={s.btnEliminar}>🗑️</button>
+              {usuarioActual?.id !== u.id && (
+                <button onClick={() => setConfirmarEliminar(u)} style={s.btnEliminar}>🗑️</button>
+              )}
             </div>
           </div>
         ))}
