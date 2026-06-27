@@ -217,7 +217,7 @@ const GestionUsuarios = () => {
             <span style={s.celda}>{new Date(u.fecha_creacion || u.creado_en).toLocaleDateString()}</span>
             <div style={{ display: 'flex', gap: '0.4rem' }}>
               <button onClick={() => { setMostrarForm(false); abrirEditar(u); }} style={s.btnEditar}>✏️</button>
-              {usuarioActual?.id !== u.id && (
+              {Number(usuarioActual?.id) !== Number(u.id) && (
                 <button onClick={() => setConfirmarEliminar(u)} style={s.btnEliminar}>🗑️</button>
               )}
             </div>
