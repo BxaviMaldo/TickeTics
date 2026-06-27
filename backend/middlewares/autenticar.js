@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
+const { Usuario } = require('../modelos');
 
-const autenticar = (req, res, next) => {
+const autenticar = async (req, res, next) => {
   const encabezado = req.headers['authorization'];
   const token = encabezado && encabezado.split(' ')[1];
 
@@ -10,6 +11,12 @@ const autenticar = (req, res, next) => {
 
   try {
     const datos = jwt.verify(token, process.env.JWT_SECRETO);
+
+    const usuario = await Usuario.findByPk(datos.id, { attributes: ['id'] });
+    if (!usuario) {
+      return res.status(401).json({ mensaje: 'Usuario no encontrado' });
+    }
+
     req.usuario = datos;
     next();
   } catch (error) {
