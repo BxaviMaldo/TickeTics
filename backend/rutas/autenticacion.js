@@ -2,7 +2,10 @@ const express = require('express');
 const bcrypt  = require('bcryptjs');
 const jwt     = require('jsonwebtoken');
 const crypto  = require('crypto');
-const { Usuario, Rol } = require('../modelos');
+const { Usuario, Rol, RegistroAuditoria } = require('../modelos');
+
+const registrarAuditoria = (usuario_id, accion, tipo_entidad, id_entidad, detalles, ip) =>
+  RegistroAuditoria.create({ usuario_id, accion, tipo_entidad, id_entidad, detalles, direccion_ip: ip }).catch(() => {});
 const autenticar = require('../middlewares/autenticar');
 const { enviarCorreo, plantillaContrasenaProvisional } = require('../servicios/correo');
 
@@ -43,6 +46,9 @@ enrutador.post('/registro', autenticar, async (req, res) => {
       asunto: '🎫 Bienvenido a TickeTics — Tu contraseña provisional',
       html: plantillaContrasenaProvisional(nombre, contrasenaProvisional, correo),
     });
+
+    await registrarAuditoria(req.usuario.id, 'crear_usuario', 'usuario', nuevoUsuario.id,
+      JSON.stringify({ nombre, correo, rol }), req.ip);
 
     res.status(201).json({ mensaje: 'Usuario creado. Se envió contraseña provisional al correo.' });
   } catch (error) {
@@ -89,6 +95,9 @@ enrutador.post('/iniciar-sesion', async (req, res) => {
       { expiresIn: '8h' }
     );
 
+    await registrarAuditoria(usuario.id, 'iniciar_sesion', 'usuario', usuario.id,
+      JSON.stringify({ correo: usuario.correo }), req.ip);
+
     res.json({
       token,
       usuario: { id: usuario.id, nombre: usuario.nombre, correo: usuario.correo, rol: rolNombre },
@@ -119,6 +128,9 @@ enrutador.put('/cambiar-contrasena', autenticar, async (req, res) => {
       },
       { where: { id: req.usuario.id } }
     );
+
+    await registrarAuditoria(req.usuario.id, 'cambiar_contrasena', 'usuario', req.usuario.id,
+      null, req.ip);
 
     res.json({ mensaje: 'Contraseña actualizada correctamente' });
   } catch (error) {

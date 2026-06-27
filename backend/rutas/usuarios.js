@@ -1,8 +1,9 @@
 const express = require('express');
-const { Usuario, Rol, Ticket, Comentario, Valoracion, RegistroAuditoria } = require('../modelos');
+const { Usuario, Rol, Ticket, Comentario, Valoracion, RegistroAuditoria, EstadoTicket } = require('../modelos');
 const { Op } = require('sequelize');
 const autenticar = require('../middlewares/autenticar');
 const verificarRol = require('../middlewares/verificarRol');
+const registrar = require('../middlewares/auditoria');
 
 const enrutador = express.Router();
 
@@ -20,7 +21,7 @@ enrutador.get('/', autenticar, verificarRol('administrador'), async (req, res) =
 });
 
 // PUT /api/usuarios/:id — solo administrador
-enrutador.put('/:id', autenticar, verificarRol('administrador'), async (req, res) => {
+enrutador.put('/:id', autenticar, verificarRol('administrador'), registrar('actualizar_usuario', 'usuario'), async (req, res) => {
   try {
     const { nombre, correo, rol } = req.body;
     const usuario = await Usuario.findByPk(req.params.id);
@@ -30,7 +31,7 @@ enrutador.put('/:id', autenticar, verificarRol('administrador'), async (req, res
     if (!rolRegistro) return res.status(400).json({ mensaje: 'Rol inválido' });
 
     await usuario.update({ nombre, correo, id_rol: rolRegistro.id_rol });
-    res.json({ mensaje: 'Usuario actualizado correctamente' });
+    res.json({ mensaje: 'Usuario actualizado correctamente', id: usuario.id });
   } catch (error) {
     res.status(500).json({ mensaje: 'Error al actualizar usuario', error: error.message });
   }
@@ -44,13 +45,9 @@ enrutador.delete('/:id', autenticar, verificarRol('administrador'), async (req, 
     if (!usuario) return res.status(404).json({ mensaje: 'Usuario no encontrado' });
 
     // Verificar que no tenga tickets abiertos o en proceso
-    const { sequelize } = require('../modelos');
-    const estadoCerrado = await sequelize.models.EstadoTicket.findOne({ where: { nombre: 'cerrado' } });
+    const estadoCerrado = await EstadoTicket.findOne({ where: { nombre: 'cerrado' } });
     const ticketsActivos = await Ticket.count({
-      where: {
-        creado_por: id,
-        id_estado: { [Op.ne]: estadoCerrado.id_estado },
-      },
+      where: { creado_por: id, id_estado: { [Op.ne]: estadoCerrado.id_estado } },
     });
     if (ticketsActivos > 0) {
       return res.status(400).json({ mensaje: `No se puede eliminar: el usuario tiene ${ticketsActivos} ticket(s) sin cerrar.` });
@@ -62,16 +59,26 @@ enrutador.delete('/:id', autenticar, verificarRol('administrador'), async (req, 
     // Eliminar valoraciones del usuario
     await Valoracion.destroy({ where: { usuario_id: id } });
 
-    // Eliminar tickets creados por el usuario (y sus comentarios/valoraciones en cascada)
-    await Ticket.destroy({ where: { creado_por: id } });
-
     // Desasignar tickets donde era técnico
     await Ticket.update({ asignado_a: null }, { where: { asignado_a: id } });
 
-    // Nullificar auditoría
+    // Nullificar referencias en auditoría
     await RegistroAuditoria.update({ usuario_id: null }, { where: { usuario_id: id } });
 
+    const nombreUsuario = usuario.nombre;
+    const correoUsuario = usuario.correo;
     await usuario.destroy();
+
+    // Registrar en auditoría
+    await RegistroAuditoria.create({
+      usuario_id: req.usuario.id,
+      accion: 'eliminar_usuario',
+      tipo_entidad: 'usuario',
+      id_entidad: Number(id),
+      detalles: JSON.stringify({ nombre: nombreUsuario, correo: correoUsuario }),
+      direccion_ip: req.ip,
+    }).catch(() => {});
+
     res.json({ mensaje: 'Usuario eliminado correctamente' });
   } catch (error) {
     res.status(500).json({ mensaje: 'Error al eliminar usuario', error: error.message });
