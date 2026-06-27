@@ -1,17 +1,23 @@
 require('dotenv').config();
 const { Sequelize } = require('sequelize');
 
-const sequelize = new Sequelize(
-  process.env.BD_NOMBRE,
-  process.env.BD_USUARIO,
-  process.env.BD_CONTRASENA,
-  {
-    host: process.env.BD_HOST,
-    port: process.env.BD_PUERTO,
-    dialect: 'postgres',
-    logging: false,
-  }
-);
+const sequelize = process.env.DATABASE_URL
+  ? new Sequelize(process.env.DATABASE_URL, {
+      dialect: 'postgres',
+      logging: false,
+      dialectOptions: { ssl: { require: true, rejectUnauthorized: false } },
+    })
+  : new Sequelize(
+      process.env.BD_NOMBRE,
+      process.env.BD_USUARIO,
+      process.env.BD_CONTRASENA,
+      {
+        host: process.env.BD_HOST,
+        port: process.env.BD_PUERTO,
+        dialect: 'postgres',
+        logging: false,
+      }
+    );
 
 const Rol             = require('./Rol')(sequelize);
 const EstadoTicket    = require('./EstadoTicket')(sequelize);
