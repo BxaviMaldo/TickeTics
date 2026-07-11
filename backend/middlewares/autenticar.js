@@ -12,9 +12,13 @@ const autenticar = async (req, res, next) => {
   try {
     const datos = jwt.verify(token, process.env.JWT_SECRETO);
 
-    const usuario = await Usuario.findByPk(datos.id, { attributes: ['id'] });
+    const usuario = await Usuario.findByPk(datos.id, { attributes: ['id', 'sesion_token'] });
     if (!usuario) {
       return res.status(401).json({ mensaje: 'Usuario no encontrado' });
+    }
+
+    if (usuario.sesion_token !== datos.sesion_token) {
+      return res.status(401).json({ mensaje: 'SESION_OTRO_DISPOSITIVO' });
     }
 
     req.usuario = datos;

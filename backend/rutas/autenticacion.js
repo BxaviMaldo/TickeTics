@@ -93,8 +93,11 @@ enrutador.post('/iniciar-sesion', async (req, res) => {
     if (!contrasenaValida) return res.status(401).json({ mensaje: 'Credenciales incorrectas' });
 
     const rolNombre = usuario.rol.nombre;
+    const sesionToken = crypto.randomUUID();
+    await usuario.update({ sesion_token: sesionToken });
+
     const token = jwt.sign(
-      { id: usuario.id, correo: usuario.correo, rol: rolNombre },
+      { id: usuario.id, correo: usuario.correo, rol: rolNombre, sesion_token: sesionToken },
       process.env.JWT_SECRETO,
       { expiresIn: '8h' }
     );

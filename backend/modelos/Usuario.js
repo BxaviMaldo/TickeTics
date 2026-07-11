@@ -11,5 +11,6 @@ module.exports = (sequelize) => {
     contrasena_provisional_hash: { type: DataTypes.STRING(255), allowNull: true },
     expira_provisional:          { type: DataTypes.DATE, allowNull: true },
     primer_ingreso:              { type: DataTypes.BOOLEAN, defaultValue: false },
+    sesion_token:                { type: DataTypes.STRING(255), allowNull: true },
   }, { tableName: 'usuarios', timestamps: false });
 };

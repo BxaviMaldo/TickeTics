@@ -1,6 +1,21 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAutenticacion } from '../contexto/ContextoAutenticacion';
+
+const ModalOtroDispositivo = ({ onCerrar }) => (
+  <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+    <div style={{ background: '#fff', borderRadius: '14px', padding: '2rem', maxWidth: '380px', width: '90%', textAlign: 'center', boxShadow: '0 8px 32px rgba(0,0,0,0.2)' }}>
+      <p style={{ fontSize: '2.5rem', margin: '0 0 0.5rem' }}>📱</p>
+      <h3 style={{ color: '#2d3250', fontWeight: 700, margin: '0 0 0.75rem' }}>Sesión cerrada</h3>
+      <p style={{ color: '#4b5563', fontSize: '0.95rem', margin: '0 0 1.5rem' }}>
+        Tu sesión fue cerrada porque se inició sesión con tu cuenta en otro dispositivo. Solo se permite una sesión activa a la vez.
+      </p>
+      <button onClick={onCerrar} style={{ padding: '0.65rem 1.5rem', background: '#2d3250', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', fontSize: '0.95rem' }}>
+        Entendido
+      </button>
+    </div>
+  </div>
+);
 
 const ModalProvExpirada = ({ onCerrar }) => (
   <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
@@ -23,6 +38,15 @@ const InicioSesion = () => {
   const [error, setError] = useState('');
   const [cargando, setCargando] = useState(false);
   const [mostrarModalExpirada, setMostrarModalExpirada] = useState(false);
+  const [mostrarModalOtroDispositivo, setMostrarModalOtroDispositivo] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('razon') === 'otro_dispositivo') {
+      setMostrarModalOtroDispositivo(true);
+      window.history.replaceState({}, '', '/iniciar-sesion');
+    }
+  }, []);
 
   const { iniciarSesion } = useAutenticacion();
   const navegar = useNavigate();
@@ -53,6 +77,7 @@ const InicioSesion = () => {
 
   return (
     <div style={estilos.contenedor}>
+      {mostrarModalOtroDispositivo && <ModalOtroDispositivo onCerrar={() => setMostrarModalOtroDispositivo(false)} />}
       {mostrarModalExpirada && <ModalProvExpirada onCerrar={() => setMostrarModalExpirada(false)} />}
       <div style={estilos.tarjeta}>
         <div style={{ textAlign: 'center', marginBottom: '0.75rem' }}>

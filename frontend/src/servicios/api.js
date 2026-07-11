@@ -24,7 +24,12 @@ api.interceptors.response.use(
     if (!esRutaLogin && (error.response?.status === 401 || error.response?.status === 403)) {
       localStorage.removeItem('token');
       localStorage.removeItem('usuario');
-      window.location.href = '/iniciar-sesion';
+      const mensaje = error.response?.data?.mensaje;
+      if (mensaje === 'SESION_OTRO_DISPOSITIVO') {
+        window.location.href = '/iniciar-sesion?razon=otro_dispositivo';
+      } else {
+        window.location.href = '/iniciar-sesion';
+      }
     }
     return Promise.reject(error);
   }
