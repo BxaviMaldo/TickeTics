@@ -40,12 +40,12 @@ enrutador.post('/registro', autenticar, async (req, res) => {
       primer_ingreso: true,
     });
 
-    // Enviar correo con contraseña provisional
-    await enviarCorreo({
+    // Enviar correo con contraseña provisional (no bloquea si falla)
+    enviarCorreo({
       destinatario: { email: correo, nombre },
       asunto: '🎫 Bienvenido a TickeTics — Tu contraseña provisional',
       html: plantillaContrasenaProvisional(nombre, contrasenaProvisional, correo),
-    });
+    }).catch(() => {});
 
     await registrarAuditoria(req.usuario.id, 'crear_usuario', 'usuario', nuevoUsuario.id,
       JSON.stringify({ nombre, correo, rol }), req.ip);
