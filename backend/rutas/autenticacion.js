@@ -73,8 +73,12 @@ enrutador.post('/iniciar-sesion', async (req, res) => {
     // Verificar contraseña provisional primero
     if (usuario.contrasena_provisional_hash && usuario.expira_provisional) {
       if (new Date() > usuario.expira_provisional) {
-        // Limpiar provisional expirada
         await usuario.update({ contrasena_provisional_hash: null, expira_provisional: null });
+        // Verificar si intentó usar la provisional expirada
+        const intentoProvisional = await bcrypt.compare(contrasena, usuario.contrasena_provisional_hash).catch(() => false);
+        if (intentoProvisional) {
+          return res.status(401).json({ mensaje: 'PROVISIONAL_EXPIRADA' });
+        }
       } else {
         usandoProvisional = await bcrypt.compare(contrasena, usuario.contrasena_provisional_hash);
         if (usandoProvisional) contrasenaValida = true;

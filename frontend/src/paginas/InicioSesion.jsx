@@ -2,11 +2,27 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAutenticacion } from '../contexto/ContextoAutenticacion';
 
+const ModalProvExpirada = ({ onCerrar }) => (
+  <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+    <div style={{ background: '#fff', borderRadius: '14px', padding: '2rem', maxWidth: '380px', width: '90%', textAlign: 'center', boxShadow: '0 8px 32px rgba(0,0,0,0.2)' }}>
+      <p style={{ fontSize: '2.5rem', margin: '0 0 0.5rem' }}>⏱️</p>
+      <h3 style={{ color: '#2d3250', fontWeight: 700, margin: '0 0 0.75rem' }}>Contraseña expirada</h3>
+      <p style={{ color: '#4b5563', fontSize: '0.95rem', margin: '0 0 1.5rem' }}>
+        El tiempo para usar la contraseña provisional ya pasó. Por favor contacta a un administrador para que genere una nueva cuenta.
+      </p>
+      <button onClick={onCerrar} style={{ padding: '0.65rem 1.5rem', background: '#2d3250', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', fontSize: '0.95rem' }}>
+        Entendido
+      </button>
+    </div>
+  </div>
+);
+
 const InicioSesion = () => {
   const [correo, setCorreo] = useState('');
   const [contrasena, setContrasena] = useState('');
   const [error, setError] = useState('');
   const [cargando, setCargando] = useState(false);
+  const [mostrarModalExpirada, setMostrarModalExpirada] = useState(false);
 
   const { iniciarSesion } = useAutenticacion();
   const navegar = useNavigate();
@@ -24,7 +40,12 @@ const InicioSesion = () => {
       else if (usuario.rol === 'tecnico') navegar('/tecnico/tickets');
       else navegar('/cliente/mis-tickets');
     } catch (err) {
-      setError(err.response?.data?.mensaje || 'Error al iniciar sesión');
+      const mensaje = err.response?.data?.mensaje;
+      if (mensaje === 'PROVISIONAL_EXPIRADA') {
+        setMostrarModalExpirada(true);
+      } else {
+        setError(mensaje || 'Error al iniciar sesión');
+      }
     } finally {
       setCargando(false);
     }
@@ -32,6 +53,7 @@ const InicioSesion = () => {
 
   return (
     <div style={estilos.contenedor}>
+      {mostrarModalExpirada && <ModalProvExpirada onCerrar={() => setMostrarModalExpirada(false)} />}
       <div style={estilos.tarjeta}>
         <div style={{ textAlign: 'center', marginBottom: '0.75rem' }}>
           <img src="/Logo.jpg" alt="TickeTics Logo" style={{ width: '150px', height: '100px', borderRadius: '16px', objectFit: 'cover'}} />
